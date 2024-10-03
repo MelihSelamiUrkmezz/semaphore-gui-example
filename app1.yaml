@@ -1,5 +1,7 @@
 ---
 - name: Log Redirect
+  remote_user: ubuntu
+  become_user: root
   hosts: all
   become: yes
   gather_facts: true
