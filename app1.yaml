@@ -1,0 +1,31 @@
+---
+- name: Log Redirect
+  hosts: all
+  become: yes
+  gather_facts: true
+  tasks:
+    - name: Read the file
+      slurp:
+        path: /etc/rsyslog.conf
+      register: file_content
+
+    - name: Define log_lines
+      set_fact:
+        log_lines:
+          - cron.* @10.115.206.21:514
+          - local7.* @10.115.206.21:514
+          - auth.* @10.115.206.21:514
+          - kern.* @10.115.206.21:514
+
+    - name: Add missing lines
+      blockinfile:
+        path: /etc/rsyslog.conf
+        block: "{{ item }}"
+        state: present
+      loop: "{{ log_lines }}"
+      when: item not in file_content.content | b64decode
+
+    - name: Restart rsyslog
+      service:
+        name: rsyslog
+        state: restarted
